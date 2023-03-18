@@ -24,16 +24,7 @@
         'static/description/logo.png',
     ],
     'depends': ['base','account','analytic','custody_request'],
-
-
-
-
     'installable': True,
     'application': True,
-
-
-
-
-
 
 }
