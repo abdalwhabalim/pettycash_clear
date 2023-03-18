@@ -1,6 +1,6 @@
 {
     'name': 'Custody Clear Request',
-    'version': '1.0',
+    'version': '15.0',
     'summary': """
     This module allows you to request some amount and reconcile with specific expenses account or return as a cash, with dynamic 
     approval process for (Cash request/Cash Reconcile)
