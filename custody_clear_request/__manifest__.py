@@ -25,7 +25,7 @@
     'images': [
         'static/description/logo.png',
     ],
-    'depends': ['base','account','analytic','custody_request'],
+    'depends': ['base','account','analytic'],
     'installable': True,
     'application': True,
 
