@@ -73,6 +73,9 @@ class FinanceApprovalRequest(models.Model):
     count_diff = fields.Integer(compute='_count_diff_compute')
     request_id = fields.Many2one('custody.request',string='Petty cash Request',domain=[('state','=','post')])
     total_request_amount = fields.Float(compute='_get_request_total')
+    attachment = fields.Binary(string='Attachments / المرفقات')
+    notes = fields.Text(string='Notes / ملاحظات ')
+
 
     @api.onchange('custody_line_ids')
     def _onchange_amount(self):
@@ -91,6 +94,10 @@ class FinanceApprovalRequest(models.Model):
 
     @api.depends('user_name')
     def _account_compute(self):
+        setting_ob = self.env['res.config.settings'].search([], order='id desc', limit=1)
+        print('aaaaaaaaaaaaaaaaaaa', setting_ob)
+        if setting_ob.petty_account_id:
+            self.account_id = setting_ob.petty_account_id
         if not self.company_id.petty_account_id:
             raise ValidationError('Please Insert Petty cash account In Company Configuration')
         else:
@@ -169,6 +176,11 @@ class FinanceApprovalRequest(models.Model):
 
     @api.depends('user_name')
     def _compute_account(self):
+        setting_ob = self.env['res.config.settings'].search([], order='id desc', limit=1)
+
+
+        if setting_ob.petty_account_id:
+            self.account_id = setting_ob.petty_account_id
         if not self.company_id.petty_account_id:
             raise ValidationError('Please Insert Petty cash account In Company Configuration')
         else:
@@ -178,10 +190,18 @@ class FinanceApprovalRequest(models.Model):
     # analytic_account = fields.Many2one(related='user_id.analytic_account_id', string='Analytic Account')
 
     # analytic_account = fields.Many2one('account.analytic.account',string='Analytic Account')
-
+    check_term = fields.Selection([('not_followup','Not Follow-up'),
+                                   ('followup','Follow-up')
+                                   ],
+                                  default='not_followup',invisible=True)
 
     # clrarance Line Many2one
     custody_line_ids = fields.One2many('custody.clear.line','custody_request_id',string='Expenses Line',copy=True)
+    # Check Details
+    check_date = fields.Date('Check Date',)
+    check_number = fields.Char('Check Number')
+    bank_template = fields.Many2one('res.bank')
+    check_id = fields.Many2one('check.followup',string="Check Reference",readonly=True)
 
     move_id2 = fields.Many2one('account.move',string='Difference Move',readonly=True)
 
@@ -194,6 +214,8 @@ class FinanceApprovalRequest(models.Model):
         return users
 
     def confirm_dm(self):
+        if not self.custody_line_ids:
+            raise ValidationError("Please add expense lines !!")
         if self.amount <= 0:
             raise ValidationError("Please Make Sure Amount Field Grater Than Zero !!")
 
@@ -237,7 +259,9 @@ class FinanceApprovalRequest(models.Model):
         self.write({'state': 'fm'})
         if not self.account_id or not self.custody_journal_id:
             raise ValidationError("Please Fill Accounting information (Journal-Employee-Account)")
-
+        if self.check_term == 'followup':
+            if not self.check_number or not self.check_date or not self.bank_template:
+                raise ValidationError("Please Fill Check Details !!")
     @api.model
     def get_amount(self):
         for i in self.custody_line_ids:
@@ -447,6 +471,21 @@ class FinanceApprovalRequest(models.Model):
         }
         self.move_id = account_move_object.create(vals)
         self.move_id.action_post()
+
+        channel_group_obj = self.env['mail.mail']
+        partner_list = []
+        for rec in self.user_name:
+            partner_list.append(rec.partner_id.id)
+        receipt_ids = self.env['res.partner'].search([('id', 'in', partner_list)])
+        dic = {
+            'subject': _('Cash Reconcile Approved: %s') % (self.name,),
+            'email_from': self.env.user.login,
+            'body_html': 'Hello, Approved petty cash Reconcile with number ' + self.name,
+            'recipient_ids': partner_list,
+        }
+        mail = channel_group_obj.create(dic)
+        mail.send()
+
         self.state = 'done'
 
 ###############################################################
@@ -584,19 +623,8 @@ class FinanceApprovalRequest(models.Model):
         self.state = 'cancel'
 
     def reject(self):
-        channel_group_obj = self.env['mail.mail']
-        partner_list = []
-        for rec in self.user_name:
-            partner_list.append(rec.partner_id.id)
-        receipt_ids = self.env['res.partner'].search([('id', 'in', partner_list)])
-        dic = {
-            'subject': _('Cash Reconcile Canceled: %s') % (self.name,),
-            'email_from': self.env.user.login,
-            'body_html': 'Hello, Canceled petty cash Reconcile with number ' + self.name,
-            'recipient_ids': partner_list,
-        }
-        mail = channel_group_obj.create(dic)
-        mail.send()
+        for i in self.approver_ids:
+            i.unlink()
         self.state = 'draft'
 
 

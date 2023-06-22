@@ -37,6 +37,7 @@
                                         <strong style="font-weight:bold;font-size:12px;">Request Number:</strong>&#160; <span style="font-size:12px;margin-left:50px;" t-field="o.request_id"/>
                                         <strong style="font-weight:bold;font-size:12px;">Status:</strong>&#160; <span style="font-size:12px;" t-field="o.state"/>
 
+                                        <!--<strong>Check Number: </strong> <p t-field="o.check_number"/>-->
 
                                     </div>
                                 </ul>
@@ -58,6 +59,8 @@
 
                             <!--&lt;!&ndash;check Details&ndash;&gt;-->
                             <!--<div class="text-right">-->
+                            <!--<div t-if="o.check_date">-->
+                            <!--<strong>Check Date: </strong> <p t-field="o.check_date"/>-->
                             <!--</div>-->
 
                             <!--</div>-->

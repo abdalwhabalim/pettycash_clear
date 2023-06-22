@@ -1,16 +1,13 @@
 {
     'name': 'Custody Clear Request',
-    'version': '15.0',
-    'summary': """
-    This module allows you to request some amount and reconcile with specific expenses account or return as a cash, with dynamic 
-    approval process for (Cash request/Cash Reconcile)
-    """,
+    'version': '1.0',
     'category': 'Accounting',
     'author': 'SGT',
-    'support': 'support@softguidetech.com',
+    'support': 'info@softguidetech.com',
     'website': 'https://softguidetech.com',
     'license': 'OPL-1',
-   
+    'price': '35',
+    'currency': 'EUR',
     'data': [
 
         'security/security_view.xml',
@@ -24,8 +21,17 @@
     'images': [
         'static/description/logo.png',
     ],
-    'depends': ['base','account','analytic'],
+    'depends': ['base','account','analytic','custody_request'],
+
+
+
+
     'installable': True,
     'application': True,
+
+
+
+
+
 
 }
