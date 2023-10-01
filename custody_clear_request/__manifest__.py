@@ -19,7 +19,7 @@
         'reports/custody_report.xml',
     ],
     'images': [
-        'static/description/logo.gif',
+        'static/description/icon.gif',
     ],
     'depends': ['base','account','analytic','custody_request'],
 
